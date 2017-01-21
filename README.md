@@ -34,6 +34,8 @@ You can push firmware updates to `POST /update` when in settings mode.
 
 ## Routes
 
+The following routes are available when the settings server is active:
+
 * `GET /` - the settings index page
 * `GET /temperature`
 * `GET /signal_strength`
