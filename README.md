@@ -32,6 +32,13 @@ $ echo -ne 'update' | nc -vvl 31415
 
 You can push firmware updates to `POST /update` when in settings mode.
 
+## Routes
+
+* `GET /` - the settings index page
+* `GET /temperature`
+* `GET /signal_strength`
+* `POST /update`
+
 ## Security
 
 If you want to verify authenticity of requests sent from this device, you can specify an HMAC secret. Temperature data sent to the gateway server will include an HMAC for the concatenation of:
