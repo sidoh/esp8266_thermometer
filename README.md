@@ -28,7 +28,7 @@ When the device is configured, it'll push temperature data and enter deep sleep.
 $ echo -ne 'update' | nc -vvl 31415
 ```
 
-## OTA updates
+#### OTA updates
 
 You can push firmware updates to `POST /update` when in settings mode.
 
