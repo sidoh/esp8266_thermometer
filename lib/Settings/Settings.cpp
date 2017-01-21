@@ -26,6 +26,8 @@ void Settings::deserialize(Settings& settings, String json) {
   settings.flagServer = parsedSettings.get<String>("flag_server");
   settings.flagServerPort = parsedSettings["flag_server_port"];
   settings.updateInterval = parsedSettings["update_interval"];
+  settings.adminUsername = parsedSettings.get<String>("admin_username");
+  settings.adminPassword = parsedSettings.get<String>("admin_password");
 }
 
 void Settings::load(Settings& settings) {
@@ -68,6 +70,8 @@ void Settings::serialize(Stream& stream, const bool prettyPrint) {
   root["flag_server"] = this->flagServer;
   root["flag_server_port"] = this->flagServerPort;
   root["update_interval"] = this->updateInterval;
+  root["admin_username"] = this->adminUsername;
+  root["admin_password"] = this->adminPassword;
   
   if (prettyPrint) {
     root.prettyPrintTo(stream);
