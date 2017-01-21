@@ -18,6 +18,8 @@ public:
     gatewaySensorPath(""),
     hmacSecret(""),
     flagServer(""),
+    adminUsername(""),
+    adminPassword(""),
     flagServerPort(31415),
     updateInterval(600000000L)
   { }
@@ -30,6 +32,9 @@ public:
   void serialize(Stream& stream, const bool prettyPrint = false);
   
   bool requiredSettingsDefined();
+  
+  String adminUsername;
+  String adminPassword;
   
   String gatewayServer;
   String gatewaySensorPath;
