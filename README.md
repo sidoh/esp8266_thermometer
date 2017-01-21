@@ -14,7 +14,7 @@ Not even worth drawing out. Data line from the DS18B20 is connected to GPIO 2. I
 
 #### WiFi
 
-I used the `WifiManager`, so assuming your chip didn't already have WiFi configured, it'll start in AP mode (network will be named something like ESP_XXXX). Connect to this network to configure WiFi.
+I used `WifiManager`, so assuming your chip didn't already have WiFi configured, it'll start in AP mode (network will be named something like ESP_XXXX). Connect to this network to configure WiFi.
 
 #### Other settings
 
