@@ -5,6 +5,7 @@ ESP8266-based thermometer. Pushes temperature data to a URL at a configurable in
 
 * ESP8266. I'm using these with NodeMCU v1s and v3s.
 * DS18B20 temperature probe. Probably works with other Dallas Instruments temperature probes.
+* (optional) batteries and battery holder. I've tried both 2x AAs and 18650s.
 
 ## Circuit
 

@@ -22,6 +22,8 @@ Settings settings;
 enum OperatingMode { UNCHECKED, SETTINGS_MODE, NORMAL_MODE };
 OperatingMode operatingMode = UNCHECKED;
 
+ADC_MODE(ADC_TOUT);
+
 float readTemperature() {
   sensors.requestTemperatures();
   return sensors.getTempFByIndex(0);
@@ -143,6 +145,27 @@ void startSettingsServer() {
     yield();
   });
   
+  server.on("/voltage", HTTP_GET, []() {
+    server.send(
+      200,
+      "text/plain",
+      String(analogRead(A0))
+    );
+  });
+  
+  server.on("/pin", HTTP_PUT, []() {
+    DynamicJsonBuffer buffer;
+    const JsonObject& req = buffer.parse(server.arg("plain"));
+    
+    const uint8_t pin = req["pin"];
+    const uint8_t val = req["value"];
+    
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, val);
+    
+    server.send(200);
+  });
+  
   server.begin();
 }
 
@@ -177,19 +200,28 @@ bool isSettingsMode() {
 }
 
 void setup() {
-  SPIFFS.remove(SETTINGS_FILE);
-  
   Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  
+  pinMode(A0, INPUT);
+  
   Serial.println();
   Serial.println("Booting Sketch...");
-  
-  sensors.begin();
-  wifiManager.autoConnect();
-  NTP.begin();
   
   if (! SPIFFS.begin()) {
     Serial.println("Failed to initialize SPFFS");
   }
+  
+  sensors.begin();
+  wifiManager.autoConnect();
+  wifiManager.setConfigPortalTimeout(180);
+  
+  if (!WiFi.isConnected()) {
+    Serial.println("Timed out trying to connect, going to reboot");
+    ESP.restart();
+  }
+  
+  NTP.begin();
   
   Settings::load(settings);
   
@@ -214,6 +246,7 @@ void loop() {
     JsonObject& response = responseBuffer.createObject();
     
     response["temperature"] = readTemperature();
+    response["voltage"] = analogRead(A0);
         
     char bodyBuffer[responseBuffer.size()];
     response.printTo(bodyBuffer, sizeof(bodyBuffer));
@@ -233,7 +266,7 @@ void loop() {
     
     http.sendRequest("PUT", body);
     http.end();
-
+  
     Serial.println();
     Serial.println("closing connection. going to sleep...");
     
