@@ -279,7 +279,10 @@ void setup() {
   }
 
   wifiManager.setConfigPortalTimeout(180);
-  wifiManager.autoConnect();
+
+  char apName[50];
+  sprintf(apName, "Thermometer_%d", ESP.getChipId());
+  wifiManager.autoConnect(apName, "fireitup");
 
   if (!WiFi.isConnected()) {
     Serial.println("Timed out trying to connect, going to reboot");
