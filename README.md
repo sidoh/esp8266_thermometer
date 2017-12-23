@@ -1,21 +1,21 @@
 # esp8266_thermometer
-ESP8266-based thermometer. Pushes temperature data to a URL at a configurable interval. Suitable for battery power.
+ESP8266-based thermometer. Pushes temperature data to a URL at a configurable interval. Suitable for battery power.  Works with multiple probes.
 
 ## Parts
 
-* ESP8266. I'm using these with NodeMCU v1s and v3s.
-* DS18B20 temperature probe. Probably works with other Dallas Instruments temperature probes.
-* (optional) batteries and battery holder. I've tried both 2x AAs and 18650s.
+* ESP8266. I'm using a NodeMCUs.
+* DS18B20 temperature probe(s). Probably works with other Dallas Instruments temperature probes.
+* (optional) batteries and battery holder. I've had good luck with a Li-Ion 18650 cell.
 
 ## Circuit
 
-Not even worth drawing out. Data line from the DS18B20 is connected to GPIO 2. If you want to use a different GPIO pin, change `TEMP_SENSOR_PIN` in `Settings.h`.
+Not even worth drawing out. Data line from the DS18B20 is connected to GPIO 2, and has a 4.7 KΩ pullup resistor.  You can configure a different data pin later.
 
 ## Configuring
 
 #### WiFi
 
-I used `WifiManager`, so assuming your chip didn't already have WiFi configured, it'll start in AP mode (network will be named something like ESP_XXXX). Connect to this network to configure WiFi.
+I used `WifiManager`, so assuming your chip didn't already have WiFi configured, it'll start in AP mode (network will be named something like Thermometer_XXXX). **The password is `fireitup`**. Connect to this network to configure WiFi.
 
 #### Other settings
 
@@ -23,7 +23,7 @@ The other settings are stored as JSON in SPIFFS. When the chip is unconfigured, 
 
 #### Breaking out of deep sleep cycle
 
-When the device is configured, it'll push temperature data and enter deep sleep. When it's in deep sleep, it's pretty much off. Each time it wakes, thought, it checks if it can connect to the "flag server" (configured in the JSON blob), and if the flag server sends the string "update", it'll boot into settings mode. I just use this on the flag server:
+When the device is configured, it'll push temperature data and enter deep sleep. When it's in deep sleep, it's pretty much off. Each time it wakes, though, it checks if it can connect to the "flag server" (configured in the JSON blob), and if the flag server sends the string "update", it'll boot into settings mode. I just use this on the flag server:
 
 ```
 $ echo -ne 'update' | nc -vvl 31415
@@ -38,8 +38,9 @@ You can push firmware updates to `POST /update` when in settings mode.
 The following routes are available when the settings server is active:
 
 * `GET /` - the settings index page
-* `GET /temperature`
-* `GET /signal_strength`
+* `GET /thermometers` - gets list of thermometers 
+* `GET /thermometers/:thermometer` - `:thermometer` can either be address or alias
+* `GET /about` - bunch of environment info
 * `POST /update`
 
 ## Security
