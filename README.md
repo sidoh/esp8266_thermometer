@@ -1,4 +1,4 @@
-# esp8266_thermometer
+# Thermometer [![Build Status](https://travis-ci.org/sidoh/esp8266_thermometer.svg?branch=master)](https://travis-ci.org/sidoh/esp8266_thermometer) [![release](http://github-release-version.herokuapp.com/github/sidoh/esp8266_thermometer/release.svg?style=flat)](https://github.com/sidoh/esp8266_thermometer/releases/latest) [![License][shield-license]][info-license]
 ESP8266-based thermometer. Pushes temperature data to a URL at a configurable interval. Suitable for battery power.  Works with multiple probes.
 
 ## Parts
@@ -76,3 +76,6 @@ The following routes are available when the settings server is active:
 * `PUT /settings` - patch settings.  Body should be JSON
 * `GET /about` - bunch of environment info
 * `POST /update`
+
+[info-license]:   https://github.com/sidoh/esp8266_thermometer/blob/master/LICENSE
+[shield-license]: https://img.shields.io/badge/license-MIT-blue.svg
