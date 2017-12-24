@@ -60,12 +60,8 @@ public:
   static void bytesToHexStr(const uint8_t* bytes, const size_t len, char* buffer, size_t maxLen) {
     char* p = buffer;
 
-    for (size_t i = 0; i < len && (p - buffer) < (maxLen - 3); i++) {
+    for (size_t i = 0; i < len && (p - buffer) < (maxLen - 2); i++) {
       p += sprintf(p, "%02X", bytes[i]);
-
-      if (i < (len - 1)) {
-        p += sprintf(p, " ");
-      }
     }
   }
 };

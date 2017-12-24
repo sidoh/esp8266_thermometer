@@ -27,11 +27,15 @@ bool Settings::requiredSettingsDefined() {
   return isDefined(flagServer) && flagServerPort > 0;
 }
 
-String Settings::resolveDeviceName(uint8_t* addr) {
+bool Settings::hasAuthSettings() {
+  return adminUsername.length() > 0 && adminPassword.length() > 0;
+}
+
+String Settings::deviceName(uint8_t* addr, bool resolveAlias) {
   char deviceIdHex[50];
   IntParsing::bytesToHexStr(addr, 8, deviceIdHex, sizeof(deviceIdHex) - 1);
 
-  if (deviceAliases.count(deviceIdHex) > 0) {
+  if (resolveAlias && deviceAliases.count(deviceIdHex) > 0) {
     return deviceAliases[deviceIdHex];
   } else {
     return deviceIdHex;
@@ -39,39 +43,66 @@ String Settings::resolveDeviceName(uint8_t* addr) {
 }
 
 void Settings::deserialize(Settings& settings, String json) {
-  StaticJsonBuffer<SETTINGS_SIZE> jsonBuffer;
+  DynamicJsonBuffer jsonBuffer;
   JsonObject& parsedSettings = jsonBuffer.parseObject(json);
 
-  settings.gatewayServer = parsedSettings.get<String>("gateway_server");
-  settings.hmacSecret = parsedSettings.get<String>("hmac_secret");
-  settings.flagServer = parsedSettings.get<String>("flag_server");
-  settings.flagServerPort = parsedSettings["flag_server_port"];
-  settings.updateInterval = parsedSettings["update_interval"];
-  settings.adminUsername = parsedSettings.get<String>("admin_username");
-  settings.adminPassword = parsedSettings.get<String>("admin_password");
-  settings.mqttServer = parsedSettings.get<String>("mqtt_server");
-  settings.mqttPort = parsedSettings["mqtt_port"];
-  settings.mqttTopic = parsedSettings.get<String>("mqtt_topic");
-  settings.mqttUsername = parsedSettings.get<String>("mqtt_username");
-  settings.mqttPassword = parsedSettings.get<String>("mqtt_password");
-  settings.opMode = opModeFromString(parsedSettings.get<String>("operating_mode"));
-  settings.sensorBusPin = parsedSettings["sensor_bus_pin"];
+  if (! parsedSettings.success()) {
+    Serial.println(F("ERROR: could not parse settings file on flash"));
+  }
 
-  if (parsedSettings.containsKey("device_aliases")) {
-    JsonObject& aliases = parsedSettings["device_aliases"];
-    settings.deviceAliases.clear();
+  settings.patch(parsedSettings);
+}
+
+void Settings::patch(JsonObject& json) {
+  setIfPresent(json, "mqtt.server", mqttServer);
+  setIfPresent(json, "mqtt.port", mqttPort);
+  setIfPresent(json, "mqtt.topic_prefix", mqttTopic);
+  setIfPresent(json, "mqtt.username", mqttUsername);
+  setIfPresent(json, "mqtt.password", mqttPassword);
+
+  setIfPresent(json, "http.gateway_server", gatewayServer);
+  setIfPresent(json, "http.hmac_secret", hmacSecret);
+
+  setIfPresent(json, "admin.web_ui_port", webPort);
+  setIfPresent(json, "admin.flag_server", flagServer);
+  setIfPresent(json, "admin.flag_server_port", flagServerPort);
+  setIfPresent(json, "admin.username", adminUsername);
+  setIfPresent(json, "admin.password", adminPassword);
+  setIfPresent(json, "thermometers.update_interval", updateInterval);
+  setIfPresent(json, "thermometers.poll_interval", sensorPollInterval);
+  setIfPresent(json, "thermometers.sensor_bus_pin", sensorBusPin);
+
+  if (json.containsKey("admin.operating_mode")) {
+    opMode = opModeFromString(json["admin.operating_mode"]);
+  }
+
+  if (json.containsKey("thermometers.aliases")) {
+    JsonObject& aliases = json["thermometers.aliases"];
+    deviceAliases.clear();
 
     for (JsonObject::iterator itr = aliases.begin(); itr != aliases.end(); ++itr) {
-      settings.deviceAliases[itr->key] = itr->value.as<const char*>();
+      const char* value = itr->value;
+
+      if (strlen(value) > 0) {
+        deviceAliases[itr->key] = value;
+      } else {
+        deviceAliases.erase(itr->key);
+      }
     }
   }
 
-  if (parsedSettings.containsKey("sensor_paths")) {
-    JsonObject& sensorPaths = parsedSettings["sensor_paths"];
-    settings.sensorPaths.clear();
+  if (json.containsKey("http.sensor_paths")) {
+    JsonObject& sensorPaths = json["http.sensor_paths"];
+    this->sensorPaths.clear();
 
     for (JsonObject::iterator itr = sensorPaths.begin(); itr != sensorPaths.end(); ++itr) {
-      settings.sensorPaths[itr->key] = itr->value.as<const char*>();
+      const char* value = itr->value;
+
+      if (strlen(value) > 0) {
+        this->sensorPaths[itr->key] = value;
+      } else {
+        this->sensorPaths.erase(itr->key);
+      }
     }
   }
 }
@@ -107,30 +138,34 @@ void Settings::save() {
 }
 
 void Settings::serialize(Stream& stream, const bool prettyPrint) {
-  StaticJsonBuffer<SETTINGS_SIZE> jsonBuffer;
+  DynamicJsonBuffer jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
-  root["gateway_server"] = this->gatewayServer;
-  root["hmac_secret"] = this->hmacSecret;
-  root["flag_server"] = this->flagServer;
-  root["flag_server_port"] = this->flagServerPort;
-  root["update_interval"] = this->updateInterval;
-  root["admin_username"] = this->adminUsername;
-  root["admin_password"] = this->adminPassword;
-  root["mqtt_server"] = this->mqttServer;
-  root["mqtt_port"] = this->mqttPort;
-  root["mqtt_topic"] = this->mqttTopic;
-  root["mqtt_username"] = this->mqttUsername;
-  root["mqtt_password"] = this->mqttPassword;
-  root["operating_mode"] = OP_MODE_NAMES[static_cast<uint8_t>(this->opMode)];
-  root["sensor_bus_pin"] = this->sensorBusPin;
+  root["mqtt.server"] = this->mqttServer;
+  root["mqtt.port"] = this->mqttPort;
+  root["mqtt.topic_prefix"] = this->mqttTopic;
+  root["mqtt.username"] = this->mqttUsername;
+  root["mqtt.password"] = this->mqttPassword;
 
-  JsonObject& aliases = root.createNestedObject("device_aliases");
+  root["http.gateway_server"] = this->gatewayServer;
+  root["http.hmac_secret"] = this->hmacSecret;
+
+  root["admin.web_ui_port"] = this->webPort;
+  root["admin.flag_server"] = this->flagServer;
+  root["admin.flag_server_port"] = this->flagServerPort;
+  root["admin.username"] = this->adminUsername;
+  root["admin.password"] = this->adminPassword;
+  root["admin.operating_mode"] = OP_MODE_NAMES[static_cast<uint8_t>(this->opMode)];
+  root["thermometers.sensor_bus_pin"] = this->sensorBusPin;
+  root["thermometers.update_interval"] = this->updateInterval;
+  root["thermometers.poll_interval"] = this->sensorPollInterval;
+
+  JsonObject& aliases = root.createNestedObject("thermometers.aliases");
   for (std::map<String, String>::iterator itr = this->deviceAliases.begin(); itr != this->deviceAliases.end(); ++itr) {
     aliases[itr->first] = itr->second;
   }
 
-  JsonObject& sensorPaths = root.createNestedObject("sensor_paths");
+  JsonObject& sensorPaths = root.createNestedObject("http.sensor_paths");
   for (std::map<String, String>::iterator itr = this->sensorPaths.begin(); itr != this->sensorPaths.end(); ++itr) {
     sensorPaths[itr->first] = itr->second;
   }
