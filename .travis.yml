@@ -1,14 +1,25 @@
 language: python
 python:
-  - '2.7'
+- '2.7'
 sudo: false
 cache:
   directories:
-    - "~/.platformio"
+  - "~/.platformio"
 install:
-  - pip install -U https://github.com/platformio/platformio-core/archive/develop.zip
-  - platformio lib install
+- pip install -U https://github.com/platformio/platformio-core/archive/develop.zip
+- platformio lib install
 script:
-  - platformio run
+- platformio run
 before_deploy:
-  - ./.prepare_release
+- "./.prepare_release"
+deploy:
+  provider: releases
+  prerelease: true
+  api_key:
+    secure: aOPSQxEE8uJ6E8jYmXQyr+UWJhr6ZT3sKtmRG0aPbElNP5ODVxZkT5wicimApTOnzfXJgAR5ZcdGpRW17E63fwhQZ9qT/cMTgG5FDiLxjhZI8GBQWNKHSYZ+rMH6yANk6Sx06KeUvr/UjKtNnGa5BGHNXX1ogndtXlZ5loZzYLsYfiBWKEAlUCnzV2L9b57h3vOcwTUWTD8vZTAbKwKoWSvc/Tz17LpMl48Q++OF6boTO15k7GoGtCCIvlDfvzGZvmp2dlLYvEVGhOwyP7InBq30bK0ZZ66luMfw2y4vqVripaJS9WQFhtF/ZgO4PBMe+y3sDqCXEFKq2XZHXZ8Heb4FHWPLU6J2JPycc7Mxt1J3RlTxvuf06LVbz+XsXa3dOvlJq0lFq3O+IIxfFWKLF99yAyFNtmHTZQ7riW0r9ZMxb7JZPCsHelZvDrpzSYRlfsknhTdhpWGSvLWcyTezRCdcE9SqJHMvBHSkR3wB2IqkrgpKNENOSfdaueHQb0z5HgOZUnsDEHmH3CFxRGqCZQ/wj1Bodh3PWcU/KaTm7imC914HMbDMgcesSbpc5mMT3wDTqmdAdZmfRD0RJRViwQRzt/oTwDI0DbebtS+GAL6jXt+vx4EG75+Up9Dar53PnBFHGXqnk9cg9eWdACwlt/yhyV0TDGMPeteQaH1lduo=
+  file_glob: true
+  skip_cleanup: true
+  file: dist/*.bin
+  on:
+    repo: sidoh/esp8266_thermometer
+    tags: true
