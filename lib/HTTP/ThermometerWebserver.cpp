@@ -227,7 +227,7 @@ ArRequestHandlerFunction ThermometerWebserver::handleAbout() {
     StaticJsonBuffer<150> buffer;
     JsonObject& res = buffer.createObject();
 
-    res["version"] = QUOTE(THERMOMETER_VERSION);
+    res["version"] = QUOTE(ESP8266_THERMOMETER_VERSION);
     res["variant"] = QUOTE(FIRMWARE_VARIANT);
     res["voltage"] = analogRead(A0);
     res["signal_strength"] = WiFi.RSSI();

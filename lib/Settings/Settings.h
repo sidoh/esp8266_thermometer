@@ -17,8 +17,8 @@
 #define FIRMWARE_VARIANT unknown
 #endif
 
-#ifndef THERMOMETER_VERSION
-#define THERMOMETER_VERSION unknown
+#ifndef ESP8266_THERMOMETER_VERSION
+#define ESP8266_THERMOMETER_VERSION unknown
 #endif
 
 #define DEFAULT_MQTT_PORT 1883
