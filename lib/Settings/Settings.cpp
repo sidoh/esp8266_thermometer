@@ -4,6 +4,8 @@
 #include <ArduinoJson.h>
 #include <FS.h>
 
+#define PORT_POSITION(s) ( s.indexOf(':') )
+
 static const char* OP_MODE_NAMES[2] = {
   "deep_sleep",
   "always_on"
@@ -21,6 +23,26 @@ OperatingMode opModeFromString(const String& s) {
 template <typename T>
 bool isDefined(const T& setting) {
   return setting != NULL && setting.length() > 0;
+}
+
+String Settings::mqttServer() {
+  int pos = PORT_POSITION(_mqttServer);
+
+  if (pos == -1) {
+    return _mqttServer;
+  } else {
+    return _mqttServer.substring(0, pos);
+  }
+}
+
+uint16_t Settings::mqttPort() {
+  int pos = PORT_POSITION(_mqttServer);
+
+  if (pos == -1) {
+    return DEFAULT_MQTT_PORT;
+  } else {
+    return atoi(_mqttServer.c_str() + pos + 1);
+  }
 }
 
 bool Settings::requiredSettingsDefined() {
@@ -54,8 +76,7 @@ void Settings::deserialize(Settings& settings, String json) {
 }
 
 void Settings::patch(JsonObject& json) {
-  setIfPresent(json, "mqtt.server", mqttServer);
-  setIfPresent(json, "mqtt.port", mqttPort);
+  setIfPresent(json, "mqtt.server", _mqttServer);
   setIfPresent(json, "mqtt.topic_prefix", mqttTopic);
   setIfPresent(json, "mqtt.username", mqttUsername);
   setIfPresent(json, "mqtt.password", mqttPassword);
@@ -141,8 +162,7 @@ void Settings::serialize(Stream& stream, const bool prettyPrint) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
-  root["mqtt.server"] = this->mqttServer;
-  root["mqtt.port"] = this->mqttPort;
+  root["mqtt.server"] = this->_mqttServer;
   root["mqtt.topic_prefix"] = this->mqttTopic;
   root["mqtt.username"] = this->mqttUsername;
   root["mqtt.password"] = this->mqttPassword;

@@ -9,7 +9,6 @@ const char JAVASCRIPT[] PROGMEM = R""""(
 
   var SETTING_KEYS = [
     "mqtt.server",
-    "mqtt.port",
     "mqtt.topic_prefix",
     "mqtt.username",
     "mqtt.password",
@@ -52,9 +51,11 @@ const char JAVASCRIPT[] PROGMEM = R""""(
   };
 
   var serializeForm = function(f) {
-    return $(f).serializeArray()
+    return $(f)
+      .serializeArray()
       .reduce(
         function(a, x) { 
+          // Submit abc[def]=x, abc[xyz]=1 as {"abc":{"def":x,"xyz":1}}
           var hashMatch = x.name.match(/([^\[]+)\[([^\]]+)\]/);
           if (hashMatch) {
             var key = hashMatch[1], subKey = hashMatch[2];
@@ -66,6 +67,7 @@ const char JAVASCRIPT[] PROGMEM = R""""(
             a[key][subKey] = x.value;
           } else if (!a[x.name]) { 
             a[x.name] = x.value; 
+          // submit abc[]=1, abc[]=2 as {"abc[]":[1,2]}
           } else { 
             a[x.name] = [a[x.name]]; 
             a[x.name].push(x.value); 

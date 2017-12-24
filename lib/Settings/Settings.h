@@ -21,6 +21,8 @@
 #define THERMOMETER_VERSION unknown
 #endif
 
+#define DEFAULT_MQTT_PORT 1883
+
 enum class OperatingMode {
   DEEP_SLEEP = 0,
   ALWAYS_ON = 1
@@ -29,19 +31,9 @@ enum class OperatingMode {
 class Settings {
 public:
   Settings() :
-    gatewayServer(""),
-    hmacSecret(""),
-    flagServer(""),
-    adminUsername(""),
-    adminPassword(""),
     flagServerPort(31415),
     updateInterval(600),
     sensorPollInterval(5),
-    mqttServer(""),
-    mqttPort(1883),
-    mqttTopic(""),
-    mqttUsername(""),
-    mqttPassword(""),
     sensorBusPin(2),
     opMode(OperatingMode::DEEP_SLEEP),
     webPort(80)
@@ -57,6 +49,9 @@ public:
 
   bool requiredSettingsDefined();
   bool hasAuthSettings();
+
+  String mqttServer();
+  uint16_t mqttPort();
 
   String deviceName(uint8_t* addr, bool resolveDeviceName = true);
 
@@ -74,8 +69,7 @@ public:
   time_t sensorPollInterval;
   OperatingMode opMode;
 
-  String mqttServer;
-  uint16_t mqttPort;
+  String _mqttServer;
   String mqttTopic;
   String mqttUsername;
   String mqttPassword;
