@@ -9,21 +9,33 @@ ESP8266-based thermometer. Pushes temperature data to a URL at a configurable in
 
 ## Circuit
 
-Not even worth drawing out. Data line from the DS18B20 is connected to GPIO 2, and has a 4.7 KΩ pullup resistor.  You can configure a different data pin later.
+Not even worth drawing out. Data line from the DS18B20 is connected to GPIO 2 by default (D4 on Wemos D1), and has a 4.7 KΩ pullup resistor.  You might want to user a lower resistor value if you have a long wire run or many sensors.
 
 ## Configuring
 
 #### WiFi
 
-I used `WifiManager`, so assuming your chip didn't already have WiFi configured, it'll start in AP mode (network will be named something like Thermometer_XXXX). **The password is `fireitup`**. Connect to this network to configure WiFi.
+If WiFi isn't configured, it'll start a setup WiFi network named something like Thermometer_XXXX. **The password is `fireitup`**. Connect to this network to configure WiFi.
 
 #### Other settings
 
-The other settings are stored as JSON in SPIFFS. When the chip is unconfigured, it starts a web server on port 80. Navigate here to edit the settings. Saving will reboot the device with the new settings.
+The other settings are stored as JSON in SPIFFS. When the chip is unconfigured, it starts a web server on port 80. Navigate here to edit the settings.
 
-#### Breaking out of deep sleep cycle
+<img src="https://imgur.com/ZyHefLa.png" width="400" />
 
-When the device is configured, it'll push temperature data and enter deep sleep. When it's in deep sleep, it's pretty much off. Each time it wakes, though, it checks if it can connect to the "flag server" (configured in the JSON blob), and if the flag server sends the string "update", it'll boot into settings mode. I just use this on the flag server:
+#### Multiple sensors
+
+Sensors connected to the OneWire bus will be auto-detected.  Data from all sensors will be pushed.  You can configure aliases for detected device IDs in the UI or via the REST API.
+
+#### Operating mode
+
+There are two operating modes: Always On, and Deep Sleep.  In Always On mode, the device will stay powered and connected to WiFi.  The UI will stay running.  This is good when connected to a persistent power source.  Deep Sleep will push sensor readings to MQTT/HTTP and enter deep sleep.  This is better when using a battery.
+
+**Breaking out of deep sleep loop**
+
+Each time the device wakes from deep sleep, it checks if it can connect to the "flag server" (configured in the JSON blob), and if the flag server sends the string **`update`**.  If it does, it'll boot into settings mode. 
+
+Example command:
 
 ```
 $ echo -ne 'update' | nc -vvl 31415
@@ -31,24 +43,36 @@ $ echo -ne 'update' | nc -vvl 31415
 
 #### OTA updates
 
-You can push firmware updates to `POST /update` when in settings mode.
+You can push firmware updates to `POST /firmware` when in settings mode.  This can also be done through the UI.
 
-## Routes
+## Integrations
 
-The following routes are available when the settings server is active:
+#### MQTT
 
-* `GET /` - the settings index page
-* `GET /thermometers` - gets list of thermometers 
-* `GET /thermometers/:thermometer` - `:thermometer` can either be address or alias
-* `GET /about` - bunch of environment info
-* `POST /update`
+To push updates to MQTT, add an MQTT server and a topic prefix.  You can optionally configure a username and password.  Updates will be sent to the topic `<topic_prefix>/<sensor_name>` for each detected sensor.  `sensor_name` will be the device ID if an alias hasn't been added.
 
-## Security
+#### HTTP
 
-If you want to verify authenticity of requests sent from this device, you can specify an HMAC secret. Temperature data sent to the gateway server will include an HMAC for the concatenation of:
+To push updates to HTTP, configure a gateway server and a path for each sensor you want to push data for.  Example:
+
+<img src="https://imgur.com/VDvCJmk.png" width="300" />
+
+If you configure an HMAC secret, an HMAC of the path, body, and current timestamp will be included in the request.  This allows you to verify the authenticity of the request.  HMAC is computed for the concatenation of:
 
 * The path being requested on the gateway server
 * The body of the request
 * Current timestamp
 
 The signature and the timestamp are included respectively as the HTTP headers `X-Signature` and `X-Signature-Timestamp`.
+
+## REST Routes
+
+The following routes are available when the settings server is active:
+
+* `GET /` - the settings index page
+* `GET /thermometers` - gets list of thermometers 
+* `GET /thermometers/:thermometer` - `:thermometer` can either be address or alias
+* `GET /settings` - return settings as JSON
+* `PUT /settings` - patch settings.  Body should be JSON
+* `GET /about` - bunch of environment info
+* `POST /update`
