@@ -1,6 +1,6 @@
 # Thermometer [![Build Status](https://travis-ci.org/sidoh/esp8266_thermometer.svg?branch=master)](https://travis-ci.org/sidoh/esp8266_thermometer) [![release](https://github-release-version.herokuapp.com/github/sidoh/esp8266_thermometer/release.svg?style=flat)](https://github.com/sidoh/esp8266_thermometer/releases/latest) [![License][shield-license]][info-license]
 
-ESP8266-based thermometer. Pushes temperature data to a URL at a configurable interval. Suitable for battery power.  Works with multiple probes.
+ESP8266-based thermometer. Pushes temperature data to a URL or MQTT at a configurable interval. Suitable for battery power.  Works with multiple probes.
 
 ## Parts
 
