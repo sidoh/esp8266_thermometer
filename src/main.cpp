@@ -39,6 +39,7 @@ time_t timestamp() {
 
 void updateTemperature(uint8_t* deviceId, float temp) {
   String deviceName = settings.deviceName(deviceId);
+  String strDeviceId = settings.deviceName(deviceId, false);
 
   StaticJsonBuffer<100> responseBuffer;
   JsonObject& response = responseBuffer.createObject();
@@ -49,10 +50,10 @@ void updateTemperature(uint8_t* deviceId, float temp) {
 
   response.printTo(body);
 
-  if (settings.sensorPaths.count(deviceName) > 0) {
+  if (settings.sensorPaths.count(strDeviceId) > 0) {
     HTTPClient http;
 
-    String sensorPath = settings.sensorPaths[deviceName];
+    String sensorPath = settings.sensorPaths[strDeviceId];
     time_t now = timestamp();
     String url = String(settings.gatewayServer) + sensorPath;
 
