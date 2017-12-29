@@ -192,7 +192,13 @@ ArUploadHandlerFunction ThermometerWebserver::handleOtaUpdate() {
 #if defined(ESP8266)
         Update.runAsync(true);
 #endif
-        Update.begin(request->contentLength());
+        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+        if (!Update.begin(maxSketchSpace)) {
+          Serial.println(F("OTA Update: ERROR - failed to initialize update"));
+          Update.printError(Serial);
+        } else {
+          Serial.println(F("OTA Update: started"));
+        }
       } else {
         Serial.println(F("OTA Update: ERROR - Content-Length header required, but not present."));
       }
