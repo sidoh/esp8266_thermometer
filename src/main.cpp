@@ -53,7 +53,7 @@ void updateTemperature(uint8_t* deviceId, float temp) {
   if (settings.sensorPaths.count(strDeviceId) > 0) {
     HTTPClient http;
 
-    String sensorPath = settings.sensorPaths[strDeviceId];
+    String sensorPath = settings.sensorPaths[deviceName];
     time_t now = timestamp();
     String url = String(settings.gatewayServer) + sensorPath;
 
@@ -86,6 +86,11 @@ void startSettingsServer() {
 }
 
 bool isSettingsMode() {
+  if (settings.opMode == OperatingMode::ALWAYS_ON) {
+    operatingState = OperatingState::SETTINGS;
+    return true;
+  }
+
   if (operatingState != OperatingState::UNCHECKED) {
     return operatingState == OperatingState::SETTINGS;
   }
@@ -174,7 +179,7 @@ void loop() {
 
   tempIface.loop();
 
-  if (isSettingsMode() || settings.opMode == OperatingMode::ALWAYS_ON) {
+  if (isSettingsMode()) {
     time_t n = now();
 
     if (n > (lastUpdate + settings.updateInterval)) {
