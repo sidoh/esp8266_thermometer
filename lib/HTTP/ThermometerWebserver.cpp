@@ -281,7 +281,7 @@ bool ThermometerWebserver::isAuthenticated(AsyncWebServerRequest* request) {
     if (request->authenticate(settings.adminUsername.c_str(), settings.adminPassword.c_str())) {
       return true;
     } else {
-      request->send_P(403, TEXT_PLAIN, PSTR("Authentication required"));
+      request->requestAuthentication();
       return false;
     }
   } else {
