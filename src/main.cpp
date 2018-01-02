@@ -53,7 +53,7 @@ void updateTemperature(uint8_t* deviceId, float temp) {
   if (settings.sensorPaths.count(strDeviceId) > 0) {
     HTTPClient http;
 
-    String sensorPath = settings.sensorPaths[deviceName];
+    String sensorPath = settings.sensorPaths[strDeviceId];
     time_t now = timestamp();
     String url = String(settings.gatewayServer) + sensorPath;
 
