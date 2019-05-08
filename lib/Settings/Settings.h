@@ -1,7 +1,6 @@
 #ifndef _SETTINGS_H_INCLUDED
 #define _SETTINGS_H_INCLUDED
 
-#include <StringStream.h>
 #include <Time.h>
 #include <Timezone.h>
 #include <ArduinoJson.h>
@@ -45,7 +44,7 @@ public:
   void save();
   String toJson(const bool prettyPrint = true);
   void serialize(Stream& stream, const bool prettyPrint = false);
-  void patch(JsonObject& json);
+  void patch(JsonObject json);
 
   bool requiredSettingsDefined();
   bool hasAuthSettings();
@@ -80,9 +79,10 @@ public:
   std::map<String, String> sensorPaths;
 
   template <typename T>
-  void setIfPresent(JsonObject& obj, const char* key, T& var) {
+  void setIfPresent(JsonObject obj, const char* key, T& var) {
     if (obj.containsKey(key)) {
-      var = obj.get<T>(key);
+      JsonVariant val = obj[key];
+      var = val.as<T>();
     }
   }
 };

@@ -2,13 +2,23 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <ThermometerWebserver.h>
 #include <FS.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
 #include <NtpClientLib.h>
+
+#if defined(ESP32)
+#include <WebServer.h>
+#elif defined(ESP8266)
+#include <ESP8266WebServer.h>
+#define WEBSERVER_H
+#endif
+#include <ESPAsyncWebServer.h>
+
 #include <WiFiManager.h>
+#include <ThermometerWebserver.h>
+
 #include <HmacHelpers.h>
 #include <Settings.h>
 #include <IntParsing.h>
@@ -41,14 +51,13 @@ void updateTemperature(uint8_t* deviceId, float temp) {
   String deviceName = settings.deviceName(deviceId);
   String strDeviceId = settings.deviceName(deviceId, false);
 
-  StaticJsonBuffer<100> responseBuffer;
-  JsonObject& response = responseBuffer.createObject();
+  StaticJsonDocument<100> response;
   String body;
 
   response["temperature"] = temp;
   response["voltage"] = analogRead(A0);
 
-  response.printTo(body);
+  serializeJson(response, body);
 
   if (settings.sensorPaths.count(strDeviceId) > 0) {
     HTTPClient http;

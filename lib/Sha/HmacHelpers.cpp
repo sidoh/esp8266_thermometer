@@ -1,16 +1,17 @@
 #include <inttypes.h>
 #include <sha1.h>
+#include <time.h>
 
 String bin2hex(const uint8_t* bin, const int length) {
   String hex = "";
-  
+
   for (int i = 0; i < length; i++) {
     if (bin[i] < 16) {
       hex += "0";
     }
     hex += String(bin[i], HEX);
   }
-  
+
   return hex;
 }
 

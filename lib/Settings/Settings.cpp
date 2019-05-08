@@ -65,17 +65,18 @@ String Settings::deviceName(uint8_t* addr, bool resolveAlias) {
 }
 
 void Settings::deserialize(Settings& settings, String json) {
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& parsedSettings = jsonBuffer.parseObject(json);
+  DynamicJsonDocument jsonBuffer(2048);
+  deserializeJson(jsonBuffer, json);
+  JsonObject parsedSettings = jsonBuffer.as<JsonObject>();
 
-  if (! parsedSettings.success()) {
+  if (parsedSettings.isNull()) {
     Serial.println(F("ERROR: could not parse settings file on flash"));
   }
 
   settings.patch(parsedSettings);
 }
 
-void Settings::patch(JsonObject& json) {
+void Settings::patch(JsonObject json) {
   setIfPresent(json, "mqtt.server", _mqttServer);
   setIfPresent(json, "mqtt.topic_prefix", mqttTopic);
   setIfPresent(json, "mqtt.username", mqttUsername);
@@ -98,31 +99,31 @@ void Settings::patch(JsonObject& json) {
   }
 
   if (json.containsKey("thermometers.aliases")) {
-    JsonObject& aliases = json["thermometers.aliases"];
+    JsonObject aliases = json["thermometers.aliases"];
     deviceAliases.clear();
 
     for (JsonObject::iterator itr = aliases.begin(); itr != aliases.end(); ++itr) {
-      const char* value = itr->value;
+      const char* value = itr->value().as<const char*>();
 
       if (strlen(value) > 0) {
-        deviceAliases[itr->key] = value;
+        deviceAliases[itr->key().c_str()] = value;
       } else {
-        deviceAliases.erase(itr->key);
+        deviceAliases.erase(itr->key().c_str());
       }
     }
   }
 
   if (json.containsKey("http.sensor_paths")) {
-    JsonObject& sensorPaths = json["http.sensor_paths"];
+    JsonObject sensorPaths = json["http.sensor_paths"].as<JsonObject>();
     this->sensorPaths.clear();
 
     for (JsonObject::iterator itr = sensorPaths.begin(); itr != sensorPaths.end(); ++itr) {
-      const char* value = itr->value;
+      const char* value = itr->value().as<const char*>();
 
       if (strlen(value) > 0) {
-        this->sensorPaths[itr->key] = value;
+        this->sensorPaths[itr->key().c_str()] = value;
       } else {
-        this->sensorPaths.erase(itr->key);
+        this->sensorPaths.erase(itr->key().c_str());
       }
     }
   }
@@ -140,13 +141,6 @@ void Settings::load(Settings& settings) {
   }
 }
 
-String Settings::toJson(const bool prettyPrint) {
-  String buffer = "";
-  StringStream s(buffer);
-  serialize(s, prettyPrint);
-  return buffer;
-}
-
 void Settings::save() {
   File f = SPIFFS.open(SETTINGS_FILE, "w");
 
@@ -159,8 +153,8 @@ void Settings::save() {
 }
 
 void Settings::serialize(Stream& stream, const bool prettyPrint) {
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
+  DynamicJsonDocument jsonBuffer(2048);
+  JsonObject root = jsonBuffer.to<JsonObject>();
 
   root["mqtt.server"] = this->_mqttServer;
   root["mqtt.topic_prefix"] = this->mqttTopic;
@@ -180,19 +174,19 @@ void Settings::serialize(Stream& stream, const bool prettyPrint) {
   root["thermometers.update_interval"] = this->updateInterval;
   root["thermometers.poll_interval"] = this->sensorPollInterval;
 
-  JsonObject& aliases = root.createNestedObject("thermometers.aliases");
+  JsonObject aliases = root.createNestedObject("thermometers.aliases");
   for (std::map<String, String>::iterator itr = this->deviceAliases.begin(); itr != this->deviceAliases.end(); ++itr) {
     aliases[itr->first] = itr->second;
   }
 
-  JsonObject& sensorPaths = root.createNestedObject("http.sensor_paths");
+  JsonObject sensorPaths = root.createNestedObject("http.sensor_paths");
   for (std::map<String, String>::iterator itr = this->sensorPaths.begin(); itr != this->sensorPaths.end(); ++itr) {
     sensorPaths[itr->first] = itr->second;
   }
 
   if (prettyPrint) {
-    root.prettyPrintTo(stream);
+    serializeJsonPretty(root, stream);
   } else {
-    root.printTo(stream);
+    serializeJson(root, stream);
   }
 }
