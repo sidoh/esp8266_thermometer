@@ -49,8 +49,16 @@ bool Settings::requiredSettingsDefined() {
   return isDefined(flagServer) && flagServerPort > 0;
 }
 
-bool Settings::hasAuthSettings() {
+bool Settings::isAuthenticationEnabled() const {
   return adminUsername.length() > 0 && adminPassword.length() > 0;
+}
+
+const String& Settings::getUsername() const {
+  return adminUsername;
+}
+
+const String& Settings::getPassword() const {
+  return adminPassword;
 }
 
 String Settings::deviceName(uint8_t* addr, bool resolveAlias) {

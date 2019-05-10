@@ -19,6 +19,7 @@ public:
   uint16_t getPort() const;
 
 private:
+  PassthroughAuthProvider<Settings> authProvider;
   RichHttpServer<RichHttpConfig> server;
   TempIface& sensors;
   Settings& settings;
@@ -37,8 +38,6 @@ private:
   void handleGetThermometer(RequestContext& request);
 
   void serveProgmemStr(const char* pgmStr, const char* contentType, RequestContext& request);
-
-  void applySettings();
 };
 
 #endif

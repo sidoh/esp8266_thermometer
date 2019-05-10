@@ -29,13 +29,13 @@ enum class OperatingMode {
 
 class Settings {
 public:
-  Settings() :
-    flagServerPort(31415),
-    updateInterval(600),
-    sensorPollInterval(5),
-    sensorBusPin(2),
-    opMode(OperatingMode::DEEP_SLEEP),
-    webPort(80)
+  Settings()
+    : flagServerPort(31415)
+    , updateInterval(600)
+    , sensorPollInterval(5)
+    , webPort(80)
+    , opMode(OperatingMode::DEEP_SLEEP)
+    , sensorBusPin(2)
   { }
 
   static void deserialize(Settings& settings, String json);
@@ -47,7 +47,10 @@ public:
   void patch(JsonObject json);
 
   bool requiredSettingsDefined();
-  bool hasAuthSettings();
+
+  bool isAuthenticationEnabled() const;
+  const String& getUsername() const;
+  const String& getPassword() const;
 
   String mqttServer();
   uint16_t mqttPort();

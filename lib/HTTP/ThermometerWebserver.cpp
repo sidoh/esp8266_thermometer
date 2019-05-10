@@ -21,13 +21,12 @@ static const char CONTENT_TYPE_HEADER[] = "Content-Type";
 using namespace std::placeholders;
 
 ThermometerWebserver::ThermometerWebserver(TempIface& sensors, Settings& settings)
-  : sensors(sensors),
-    settings(settings),
-    port(settings.webPort),
-    server(RichHttpServer<RichHttpConfig>(settings.webPort))
-{
-  applySettings();
-}
+  : authProvider(settings)
+  , server(RichHttpServer<RichHttpConfig>(settings.webPort, authProvider))
+  , sensors(sensors)
+  , settings(settings)
+  , port(settings.webPort)
+{ }
 
 ThermometerWebserver::~ThermometerWebserver() {
   server.reset();
@@ -198,19 +197,9 @@ void ThermometerWebserver::handleUpdateSettings(RequestContext& request) {
   settings.patch(req);
   settings.save();
 
-  applySettings();
   request.rawRequest->send(SPIFFS, SETTINGS_FILE, APPLICATION_JSON);
 }
 
 void ThermometerWebserver::handleListSettings(RequestContext& request) {
   request.rawRequest->send(SPIFFS, SETTINGS_FILE, APPLICATION_JSON);
-}
-
-void ThermometerWebserver::applySettings() {
-  if (settings.hasAuthSettings()) {
-    Serial.println("requiring auth");
-    server.requireAuthentication(settings.adminUsername, settings.adminPassword);
-  } else {
-    server.disableAuthentication();
-  }
 }
