@@ -1,5 +1,7 @@
 .pioenvs
 .piolibdeps
+.pio
 .clang_complete
 .gcc-flags.json
 lib/readme.txt
+.vscode

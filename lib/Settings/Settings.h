@@ -1,7 +1,6 @@
 #ifndef _SETTINGS_H_INCLUDED
 #define _SETTINGS_H_INCLUDED
 
-#include <StringStream.h>
 #include <Time.h>
 #include <Timezone.h>
 #include <ArduinoJson.h>
@@ -30,13 +29,13 @@ enum class OperatingMode {
 
 class Settings {
 public:
-  Settings() :
-    flagServerPort(31415),
-    updateInterval(600),
-    sensorPollInterval(5),
-    sensorBusPin(2),
-    opMode(OperatingMode::DEEP_SLEEP),
-    webPort(80)
+  Settings()
+    : flagServerPort(31415)
+    , updateInterval(600)
+    , sensorPollInterval(5)
+    , webPort(80)
+    , opMode(OperatingMode::DEEP_SLEEP)
+    , sensorBusPin(2)
   { }
 
   static void deserialize(Settings& settings, String json);
@@ -45,10 +44,13 @@ public:
   void save();
   String toJson(const bool prettyPrint = true);
   void serialize(Stream& stream, const bool prettyPrint = false);
-  void patch(JsonObject& json);
+  void patch(JsonObject json);
 
   bool requiredSettingsDefined();
-  bool hasAuthSettings();
+
+  bool isAuthenticationEnabled() const;
+  const String& getUsername() const;
+  const String& getPassword() const;
 
   String mqttServer();
   uint16_t mqttPort();
@@ -80,9 +82,10 @@ public:
   std::map<String, String> sensorPaths;
 
   template <typename T>
-  void setIfPresent(JsonObject& obj, const char* key, T& var) {
+  void setIfPresent(JsonObject obj, const char* key, T& var) {
     if (obj.containsKey(key)) {
-      var = obj.get<T>(key);
+      JsonVariant val = obj[key];
+      var = val.as<T>();
     }
   }
 };
