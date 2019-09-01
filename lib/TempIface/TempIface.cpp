@@ -13,10 +13,14 @@ void TempIface::begin() {
 
   char strAddr[50];
 
-  for (uint8_t i = 0; i < sensors->getDeviceCount(); ++i) {
+  Serial.printf_P(PSTR("[Thermometer Scan] Detected %d devices\n"), sensors->getDeviceCount());
+
+  for (size_t i = 0; i < sensors->getDeviceCount(); ++i) {
     uint8_t* addr = new uint8_t[8];
     sensors->getAddress(addr, i);
     IntParsing::bytesToHexStr(addr, 8, strAddr, sizeof(strAddr)-1);
+
+    Serial.printf_P(PSTR("[Thermometer Scan] ... found thermometer with address: %s\n"), strAddr);
 
     seenIds[strAddr] = addr;
   }
