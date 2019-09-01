@@ -68,7 +68,7 @@ void ThermometerWebserver::begin() {
     .buildHandler("/style.css")
     .on(HTTP_GET, std::bind(&ThermometerWebserver::serveProgmemStr, this, STYLESHEET, "text/css", _1));
   server
-    .buildHandler("/")
+    .buildHandler("/script.js")
     .on(HTTP_GET, std::bind(&ThermometerWebserver::serveProgmemStr, this, JAVASCRIPT, "application/javascript", _1));
 
   server.clearBuilders();
